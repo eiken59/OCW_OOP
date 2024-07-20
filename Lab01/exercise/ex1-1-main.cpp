@@ -1,5 +1,7 @@
 #include <fstream>
 #include "ex1-1.h"
+#include <iomanip>
+#include <cstdlib>
 using namespace Complex;
 
 void ReadTextFile(char[], Cplex &, Cplex &);
@@ -42,11 +44,12 @@ void ReadTextFile(char fileName[], Cplex &c1, Cplex &c2) {
 void PrintComplex(char fileName[], Cplex complexResults[]) {
     std::ofstream fout;
     fout.open(fileName);
+    fout.precision(4);
     for(int i = 0; i < 4; i++) {
         if (complexResults[i].image < 0)
-            fout << complexResults[i].real << complexResults[i].image << "i" << std::endl;
+            fout << std::fixed << complexResults[i].real << complexResults[i].image << "i" << std::endl;
         else
-            fout << complexResults[i].real << "+" << complexResults[i].image << "i" << std::endl;
+            fout << std::fixed << complexResults[i].real << "+" << complexResults[i].image << "i" << std::endl;
     }
     fout.close();
 }
