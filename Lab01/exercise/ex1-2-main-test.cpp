@@ -1,5 +1,7 @@
 #include <fstream>
 #include <iostream>
+#include <string.h>
+#include <cmath>
 using namespace std;
 
 const int MAX = 1000;
@@ -15,13 +17,13 @@ typedef struct {
 }Poly;
 
 void ReadTextFile(Poly &);
-void DifferenetiationPoly(Poly &);
+void DifferentiationPoly(Poly &);
 void PrintResult(Poly);
 
 int main() {
     Poly eq;
     ReadTextFile(eq); // process text file
-    //DifferentationPoly(eq); // differentiation of polynomials
+    DifferentiationPoly(eq); // differentiation of polynomials
     PrintResult(eq); // print the results on file.
     return 0;
 }
@@ -30,9 +32,9 @@ void ReadTextFile(Poly &expression) {
     std::ifstream fin;
     fin.open("input_file.txt");
     char tempCoeff[10];
-    int tempPower;
+    tempCoeff[0] = '\0';
+    int tempPower = -1;
     char temp;
-    char tempSign;
     int numberOfItems = 0;
     int posOfCoeff = 0;
 
@@ -42,11 +44,15 @@ void ReadTextFile(Poly &expression) {
             posOfCoeff++;
         }
         else if (temp == '+' || temp == '-') {
-            if (numberOfItems == 0 && posOfCoeff == 0) {
+            if (numberOfItems == 0 && posOfCoeff == 0 && tempPower == -1) {
                 tempCoeff[posOfCoeff] = temp;
                 posOfCoeff++;
             }
             else {
+                if (strlen(tempCoeff) == 0) {
+                    tempCoeff[0] = '1';
+                    posOfCoeff = 1;
+                }
                 tempCoeff[posOfCoeff] = '\0';
                 for (int i = 0; i < posOfCoeff; i++) {
                     expression.items[numberOfItems].coeff[i] = tempCoeff[i];
@@ -64,6 +70,10 @@ void ReadTextFile(Poly &expression) {
     }
     
     tempCoeff[posOfCoeff] = '\0';
+    if (strlen(tempCoeff) == 0) {
+        tempCoeff[0] = '1';
+        posOfCoeff = 1;
+    }
     for (int i = 0; i < posOfCoeff; i++) {
         expression.items[numberOfItems].coeff[i] = tempCoeff[i];
     }
@@ -75,11 +85,39 @@ void ReadTextFile(Poly &expression) {
 }
 
 void DifferentiationPoly(Poly &expression) {
-    // 好難
+    for (int i = 0; i < expression.num_items; i++) {
+        cout << "Differentiating a term with power " << expression.items[i].power << "." << endl;
+        if (expression.items[i].power == 0) {
+            expression.items[i].coeff[0] = '\0';
+        }
+        else {
+            int coeff = 0;
+            if (expression.items[i].coeff[0] == '+' || expression.items[i].coeff[0] == '-') {
+                if (strlen(expression.items[i].coeff) == 1) {
+                    if (expression.items[i].coeff[0] == '+') coeff = expression.items[i].power;
+                    else coeff = -1 * expression.items[i].power;
+                }
+                else {
+                    coeff = atoi(expression.items[i].coeff) * expression.items[i].power;
+                }
+            }
+            else {
+                coeff = atoi(expression.items[i].coeff) * expression.items[i].power;
+            }
+            string temp_str = to_string(coeff);
+            char const* tempCoeff = temp_str.c_str();
+            for (int j = 0; j < strlen(tempCoeff); j++) {
+                expression.items[i].coeff[j] = tempCoeff[j];
+            }
+            expression.items[i].coeff[strlen(tempCoeff)] = '\0';
+        }
+        expression.items[i].power--;
+    }
 }
 
 void PrintResult(Poly expression) {
     int n = expression.num_items;
+    int numberOfTerms = 0;
     int arrayOfPowers[MAX];
     for (int i = 0; i < n; i++) {
         arrayOfPowers[i] = expression.items[i].power;
@@ -88,23 +126,45 @@ void PrintResult(Poly expression) {
     for (int i = 1; i < n; i++) {
         if (arrayOfPowers[i] > max) max = arrayOfPowers[i];
     }
-    for (int i = max; i > 0 || i == 0; i--) {
-        for (int ii = 0; ii < n; ii++) {
-            if (expression.items[ii].power == i) {
-                if (expression.items[ii].coeff[0] == '+' || expression.items[ii].coeff[0] == '-') {
-                    for (int iii = 0; iii < sizeof expression.items[ii] - 1; iii++) {
-                        cout << expression.items[ii].coeff[iii];
+    for (int i = max; i >= 0; i--) {
+        for (int j = 0; j < n; j++) {
+            if (expression.items[j].power == i) {
+                if (((expression.items[j].coeff[0] == '+' || expression.items[j].coeff[0] == '-') && expression.items[j].coeff[1] == '0') || expression.items[j].coeff[0] == '0' || expression.items[j].coeff[0] == '\0') {
+                    continue;
+                }
+                else if (numberOfTerms) {
+                    if (expression.items[j].coeff[0] == '+' || expression.items[j].coeff[0] == '-') {
+                        for (int k = 0; k < strlen(expression.items[j].coeff); k++) {
+                            cout << expression.items[j].coeff[k];
+                        }
                     }
+                    else {
+                        cout << '+';
+                        for (int k = 0; k < strlen(expression.items[j].coeff); k++) {
+                            cout << expression.items[j].coeff[k];
+                        }
+                    }
+                    if (i == 0) ;
+                    else if (i == 1) cout << 'X';
+                    else cout << "X^" << expression.items[j].power;
+                    numberOfTerms++;
                 }
                 else {
-                    cout << '+';
-                    for (int iii = 0; iii < sizeof expression.items[ii] - 1; iii++) {
-                        cout << expression.items[ii].coeff[iii];
+                    if (expression.items[j].coeff[0] == '+') {
+                        for (int k = 1; k < strlen(expression.items[j].coeff); k++) {
+                            cout << expression.items[j].coeff[k];
+                        }
                     }
+                    else {
+                        for (int k = 0; k < strlen(expression.items[j].coeff); k++) {
+                            cout << expression.items[j].coeff[k];
+                        }
+                    }
+                    if (i == 0) ;
+                    else if (i == 1) cout << 'X';
+                    else cout << "X^" << expression.items[j].power;
+                    numberOfTerms++;
                 }
-                if (i == 0) ;
-                else if (i == 1) cout << 'X';
-                else cout << "X^" << expression.items[ii].power;
             }
         }
     }
