@@ -1,7 +1,6 @@
 #include <fstream>
 #include <iostream>
 #include <string.h>
-#include <cmath>
 using namespace std;
 
 const int MAX = 1000;
