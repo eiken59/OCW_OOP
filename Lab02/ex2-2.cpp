@@ -117,8 +117,9 @@ BIGNUMBER BigNumberOperation(BIGNUMBER big1, BIGNUMBER big2, char oper) {
             }
             break;
         case '-':
+        // minus is not working
             if (!(big1.sign ^ big2.sign)) {
-                if (big1.length > big2.length) {
+                if (big1.length > big2.length || (big1.length == big2.length && memcmp(big1.data, big2.data, big1.length) >= 0)) {
                     tempBig.sign = big1.sign;
                     int max_len = max(big1.length, big2.length);
                     tempBig.length = max_len;
@@ -136,9 +137,6 @@ BIGNUMBER BigNumberOperation(BIGNUMBER big1, BIGNUMBER big2, char oper) {
                             tempBig.data[i + 1] -= 1;
                         }
                     }
-                }
-                else if (big1.length == big2.length) {
-                    //
                 }
                 else {
                     tempBig = BigNumberOperation(big2, big1, '-');
