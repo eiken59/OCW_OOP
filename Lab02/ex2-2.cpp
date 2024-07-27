@@ -1,5 +1,8 @@
 #include <fstream>
 #include <iostream>
+#include <string>
+#include <cstring>
+#include <cmath>
 
 using namespace std;
 
@@ -9,120 +12,168 @@ typedef struct {
     bool sign;
 } BIGNUMBER;
 
-void ReadTextFile(char[], BIGNUMBER&, BIGNUMBER&);
-void operator-(BIGNUMBER&);
+void ReadTextFile(BIGNUMBER&, BIGNUMBER&);
 BIGNUMBER BigNumberOperation(BIGNUMBER, BIGNUMBER, char);
-void PrintResults(char[], BIGNUMBER[]);
+void PrintResults(BIGNUMBER[]);
 
-int main(int argc, char *argv[]) {
+int main() {
     BIGNUMBER a, b;
-    ReadTextFile(argv[1], a, b);
+    ReadTextFile(a, b);
 
     BIGNUMBER results[2];
 
     results[0] = BigNumberOperation(a, b, '+');
     results[1] = BigNumberOperation(a, b, '-');
 
-    PrintResults(argv[2], results);
+    PrintResults(results);
 
     return 0;
 }
 
-void ReadTextFile(char fileName[], BIGNUMBER &big1, BIGNUMBER &big2) {
+void ReadTextFile(BIGNUMBER &big1, BIGNUMBER &big2) {
     ifstream fin;
-    fin.open(fileName);
-    char tempChar;
-    n = 0;
-    while (fin.get(tempChar)) {
-        if (tempChar != '\n') {
-            if (n > 0) {
-                for (int i = 0; i < n; i++) {
-                    big1[i+1] = big1[i];
-                }
-            }
-            big1[0] = int(tempChar);
-            n++;
-        }
-        else {
-            big1.length = n;
-            n = 0;
-            break;
-        }
-    }
-    while (fin.get(tempChar)) {
-        if (tempChar != '\n') {
-            if (n > 0) {
-                for (int i = 0; i < n; i++) {
-                    big2[i+1] = big2[i];
-                }
-            }
-            big2[0] = int(tempChar);
-            n++;
-        }
-        else {
-            big1.length = n;
-            n = 0;
-            break;
-        }
-    }
-    if (big1.data[big1.length - 1] == '-') {
-        big1.sign = false;
-        for (int i = 1; i < n; i++) {
-            big1.data[i - 1] = big1.data[i];
-        }
-        big1.data[n] = '\0';
-        big1.length--;
-    }
-    else if (big1.data[big1.length - 1] == '+') {
-        big1.sign = true;
-        for (int i = 1; i < n; i++) {
-            big1.data[i - 1] = big1.data[i];
-        }
-        big1.data[n] = '\0';
-        big1.length--;
-    }
-    else {
-        big1.sign = true;
-    }
-    if (big2.data[big2.length - 1] == '-') {
-        big2.sign = false;
-        for (int i = 1; i < n; i++) {
-            big2.data[i - 1] = big2.data[i];
-        }
-        big2.data[n] = '\0';
-        big2.length--;
-    }
-    else if (big2.data[big2.length - 1] == '+') {
-        big2.sign = true;
-        for (int i = 1; i < n; i++) {
-            big2.data[i - 1] = big2.data[i];
-        }
-        big2.data[n] = '\0';
-        big2.length--;
-    }
-    else {
-        big2.sign = true;
-    }
-}
+    fin.open("bignumber.txt");
+    string tempString;
 
-void operator-(BIGNUMBER &big) {
-    big.sign = !big.sign;
+    getline(fin, tempString);
+    if (isdigit(tempString[0])) {
+        big1.sign = true;
+        big1.data = new int[tempString.length()];
+        for (int i = 0; i < tempString.length(); i++) {
+            big1.data[tempString.length() - 1 - i] = int(tempString[i]) - 48;
+        }
+        big1.data[tempString.length()] = '\0';
+        big1.length = tempString.length();
+    }
+    else {
+        if (tempString[0] == '+') big1.sign = true;
+        else if (tempString[0] == '-') big1.sign = false;
+        big1.data = new int[tempString.length() - 1];
+        for (int i = 0; i < tempString.length() - 1; i++) {
+            big1.data[tempString.length() - 2 - i] = int(tempString[i]) - 48;
+        }
+        big1.data[tempString.length() - 1] = '\0';
+        big1.length = tempString.length() - 1;
+    }
+
+    getline(fin, tempString);
+    if (isdigit(tempString[0])) {
+        big2.sign = true;
+        big2.data = new int[tempString.length()];
+        for (int i = 0; i < tempString.length(); i++) {
+            big2.data[tempString.length() - 1 - i] = int(tempString[i]) - 48;
+        }
+        big2.data[tempString.length()] = '\0';
+        big2.length = tempString.length();
+    }
+    else {
+        if (tempString[0] == '+') big2.sign = true;
+        else if (tempString[0] == '-') big2.sign = false;
+        big2.data = new int[tempString.length() - 1];
+        for (int i = 0; i < tempString.length() - 1; i++) {
+            big2.data[tempString.length() - 2 - i] = int(tempString[i]) - 48;
+        }
+        big2.data[tempString.length() - 1] = '\0';
+        big2.length = tempString.length() - 1;
+    }
+
+    fin.close();
 }
 
 BIGNUMBER BigNumberOperation(BIGNUMBER big1, BIGNUMBER big2, char oper) {
+    BIGNUMBER tempBig;
     switch (oper) {
         case '+':
-            BIGNUMBER tempBig;
-            //`big1` and `big2` are with the same sign.
-            if (!(big1 ^ big2)) {
+            if (!(big1.sign ^ big2.sign)) {
                 tempBig.sign = big1.sign;
-                
+                int max_len = max(big1.length, big2.length);
+                tempBig.length = max_len;
+                tempBig.data = new int[max_len + 1]();
+                for (int i = 0; i < big1.length; i++) {
+                    tempBig.data[i] = big1.data[i];
+                }
+                for (int i = 0; i < big2.length; i++) {
+                    tempBig.data[i] += big2.data[i];
+                }
+                tempBig.data[max_len] = '\0';
+                for (int i = 0; i < max_len - 1; i++) {
+                    if (tempBig.data[i] >= 10) {
+                        int carry = tempBig.data[i] / 10;
+                        tempBig.data[i] %= 10;
+                        tempBig.data[i + 1] += carry;
+                    }
+                }
+                return tempBig;
+            }
+            else {
+                if (big1.sign == true) {
+                    big2.sign = !big2.sign;
+                    return BigNumberOperation(big1, big2, '-');
+                }
+                else {
+                    big1.sign = !big1.sign;
+                    return BigNumberOperation(big2, big1, '-');
+                }
             }
             break;
         case '-':
-            return BigNumberOperation(big1, -big2, '+');
+            if (!(big1.sign ^ big2.sign)) {
+                if (big1.length > big2.length) {
+                    tempBig.sign = big1.sign;
+                    int max_len = max(big1.length, big2.length);
+                    tempBig.length = max_len;
+                    tempBig.data = new int[max_len + 1]();
+                    for (int i = 0; i < big1.length; i++) {
+                        tempBig.data[i] = big1.data[i];
+                    }
+                    for (int i = 0; i < big2.length; i++) {
+                        tempBig.data[i] -= big2.data[i];
+                    }
+                    tempBig.data[max_len] = '\0';
+                    for (int i = 0; i < max_len - 1; i++) {
+                        if (tempBig.data[i] < 0) {
+                            tempBig.data[i] += 10;
+                            tempBig.data[i + 1] -= 1;
+                        }
+                    }
+                }
+                else if (big1.length == big2.length) {
+                    //
+                }
+                else {
+                    tempBig = BigNumberOperation(big2, big1, '-');
+                    tempBig.sign = !(tempBig.sign);
+                    return tempBig;
+                }
+            }
+            else {
+                if (big1.sign == true) {
+                    big2.sign = !big2.sign;
+                    return BigNumberOperation(big1, big2, '+');
+                }
+                else {
+                    big1.sign = !big1.sign;
+                    return BigNumberOperation(big2, big1, '+');
+                }
+            }
             break;
         default:
             break;
+    }
+}
+
+void PrintResults(BIGNUMBER bigs[]) {
+    for (int j = 0; j < 2; j++) {
+        if (bigs[j].sign == false) cout << '-';
+        for (int k = 0; k < bigs[j].length; k++) {
+            if (k != 0) {
+                cout << bigs[j].data[bigs[j].length - 1 - k] << "\'";
+            }
+            else {
+                if (bigs[j].data[bigs[j].length - 1 - k] != 0) cout << bigs[j].data[bigs[j].length - 1 - k] << "\'";
+                else cout << "\'";
+            }
+        }
+        cout << endl;
     }
 }
