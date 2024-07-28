@@ -84,26 +84,31 @@ BIGNUMBER BigNumberOperation(BIGNUMBER big1, BIGNUMBER big2, char oper) {
     BIGNUMBER tempBig;
     switch (oper) {
         case '+':
-            if (!(big1.sign ^ big2.sign)) {
-                tempBig.sign = big1.sign;
-                int max_len = max(big1.length, big2.length);
-                tempBig.length = max_len;
-                tempBig.data = new int[max_len + 1]();
-                for (int i = 0; i < big1.length; i++) {
-                    tempBig.data[i] = big1.data[i];
-                }
-                for (int i = 0; i < big2.length; i++) {
-                    tempBig.data[i] += big2.data[i];
-                }
-                tempBig.data[max_len] = '\0';
-                for (int i = 0; i < max_len - 1; i++) {
-                    if (tempBig.data[i] >= 10) {
-                        int carry = tempBig.data[i] / 10;
-                        tempBig.data[i] %= 10;
-                        tempBig.data[i + 1] += carry;
+            if (big1.sign == big2.sign) {
+                if (big1.length >= big2.length) {
+                    tempBig.sign = big1.sign;
+                    int max_len = big1.length;
+                    tempBig.length = max_len;
+                    tempBig.data = new int[max_len + 1];
+                    for (int i = 0; i < big1.length; i++) {
+                        tempBig.data[i] = big1.data[i];
                     }
+                    for (int i = 0; i < big2.length; i++) {
+                        tempBig.data[i] = big2.data[i] + big1.data[i];
+                    }
+                    tempBig.data[max_len] = '\0';
+                    for (int i = 0; i < max_len - 1; i++) {
+                        if (tempBig.data[i] >= 10) {
+                            int carry = tempBig.data[i] / 10;
+                            tempBig.data[i] %= 10;
+                            tempBig.data[i + 1] += carry;
+                        }
+                    }
+                    return tempBig;
                 }
-                return tempBig;
+                else {
+                    return BigNumberOperation(big2, big1, '+');
+                }
             }
             else {
                 if (big1.sign == true) {
@@ -117,13 +122,12 @@ BIGNUMBER BigNumberOperation(BIGNUMBER big1, BIGNUMBER big2, char oper) {
             }
             break;
         case '-':
-        // minus is not working
-            if (!(big1.sign ^ big2.sign)) {
+            if (big1.sign == big2.sign) {
                 if (big1.length > big2.length || (big1.length == big2.length && memcmp(big1.data, big2.data, big1.length) >= 0)) {
                     tempBig.sign = big1.sign;
-                    int max_len = max(big1.length, big2.length);
+                    int max_len = big1.length;
                     tempBig.length = max_len;
-                    tempBig.data = new int[max_len + 1]();
+                    tempBig.data = new int[max_len + 1];
                     for (int i = 0; i < big1.length; i++) {
                         tempBig.data[i] = big1.data[i];
                     }
@@ -137,6 +141,7 @@ BIGNUMBER BigNumberOperation(BIGNUMBER big1, BIGNUMBER big2, char oper) {
                             tempBig.data[i + 1] -= 1;
                         }
                     }
+                    return tempBig;
                 }
                 else {
                     tempBig = BigNumberOperation(big2, big1, '-');
@@ -156,6 +161,7 @@ BIGNUMBER BigNumberOperation(BIGNUMBER big1, BIGNUMBER big2, char oper) {
             }
             break;
         default:
+            return big1;
             break;
     }
 }
@@ -165,11 +171,7 @@ void PrintResults(BIGNUMBER bigs[]) {
         if (bigs[j].sign == false) cout << '-';
         for (int k = 0; k < bigs[j].length; k++) {
             if (k != 0) {
-                cout << bigs[j].data[bigs[j].length - 1 - k] << "\'";
-            }
-            else {
-                if (bigs[j].data[bigs[j].length - 1 - k] != 0) cout << bigs[j].data[bigs[j].length - 1 - k] << "\'";
-                else cout << "\'";
+                cout << bigs[j].data[bigs[j].length - 1 - k];
             }
         }
         cout << endl;
